@@ -1,4 +1,5 @@
 from flask import Flask, render_template
+
 app = Flask(__name__)
 
 @app.route('/')
@@ -13,6 +14,9 @@ def yoda():
 def new():
     return render_template("rickroll.html")
 
+@app.route('/staplefactory')
+def staplefactory():
+    return staplefactory.play()
 
 if __name__ == '__main__':
     app.debug = True
