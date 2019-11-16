@@ -2,12 +2,16 @@ from flask import Flask, render_template
 app = Flask(__name__)
 
 @app.route('/')
-def index():
+def home():
     return render_template("home.html")
 
 @app.route('/yoda')
 def yoda():
     return render_template("yoda.html")
+
+@app.route('/new')
+def new():
+    return render_template("new.html")
 
 
 if __name__ == '__main__':

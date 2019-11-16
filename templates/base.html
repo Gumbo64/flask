@@ -1,11 +1,22 @@
 <html>
         <body> <!--body means the text you actually see on the website-->
            <!-- between these two we are inserting our relevant-->
+           <header>
+                <div class="container">
+                  <h1 class="logo">First Web App</h1>
+                  <strong><nav>
+                    <ul class="menu">
+                      <li><a href="{{ url_for('home') }}">Home</a></li>
+                      <li><a href="{{ url_for('yoda') }}">About</a></li>
+                    </ul>
+                  </nav></strong>
+                </div>
+              </header>
            {% block header %}{% endblock %}
             <!-- p is paragraphing-->
             {% block text %}{% endblock %}
-                
+            {% block image %}{% endblock %}
     </body>
-    {% block image %}{endblock}
+    
 
 </html>
