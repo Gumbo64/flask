@@ -9,9 +9,9 @@ def home():
 def yoda():
     return render_template("yoda.html")
 
-@app.route('/new')
+@app.route('/rickroll')
 def new():
-    return render_template("new.html")
+    return render_template("rickroll.html")
 
 
 if __name__ == '__main__':

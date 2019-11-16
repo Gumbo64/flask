@@ -1,21 +1,31 @@
 <html>
-        <body> <!--body means the text you actually see on the website-->
-           <!-- between these two we are inserting our relevant-->
-           <header>
+        <body>
+           
+        <header>
+                <link rel="stylesheet" href="{{ url_for('static',    filename='css/main.css') }}">
                 <div class="container">
-                  <h1 class="logo">First Web App</h1>
-                  <strong><nav>
+                        <div id="navigation">
+                        <h1 class="logo">Navigation menu</h1>
+                        <strong><nav>
                     <ul class="menu">
                       <li><a href="{{ url_for('home') }}">Home</a></li>
-                      <li><a href="{{ url_for('yoda') }}">About</a></li>
+                      <li><a href="{{ url_for('yoda') }}">Yoda</a></li>
                     </ul>
                   </nav></strong>
+                <div id="header">
+                
+                {% block header %}{% endblock %}
+                </div>
+                <div id="text">
+                {% block text %}{% endblock %}
+                </div>
+
+                {% block image %}{% endblock %}
+
+                </div>
                 </div>
               </header>
-           {% block header %}{% endblock %}
-            <!-- p is paragraphing-->
-            {% block text %}{% endblock %}
-            {% block image %}{% endblock %}
+           
     </body>
     
 
