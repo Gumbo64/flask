@@ -14,9 +14,9 @@ def yoda():
 def new():
     return render_template("rickroll.html")
 
-@app.route('/staplefactory')
+@app.route('/forms')
 def staplefactory():
-    return staplefactory.play()
+    return ""
 
 if __name__ == '__main__':
     app.debug = True
