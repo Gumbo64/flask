@@ -1,4 +1,5 @@
 from flask import Flask, render_template
+import forms
 
 app = Flask(__name__)
 
@@ -10,13 +11,12 @@ def home():
 def yoda():
     return render_template("yoda.html")
 
-@app.route('/rickroll')
-def new():
-    return render_template("rickroll.html")
-
-@app.route('/forms')
-def staplefactory():
-    return ""
+@app.route('/forms', methods=('GET', 'POST'))
+def submit():
+    form = MyForm()
+    if form.validate_on_submit():
+        return redirect('/success')
+    return render_template('submit.html', form=form)
 
 if __name__ == '__main__':
     app.debug = True
