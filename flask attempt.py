@@ -1,7 +1,13 @@
 from flask import Flask, render_template
-import forms
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'secretkey'
+
+class LoginForm(FlaskForm):
+    username = StringField('username')
+    password = PasswordField('password')
 
 @app.route('/')
 def home():
@@ -11,12 +17,18 @@ def home():
 def yoda():
     return render_template("yoda.html")
 
-@app.route('/forms', methods=('GET', 'POST'))
-def submit():
-    form = MyForm()
+#need get and post to receive data from form
+@app.route('/forms', methods=['GET', 'POST'])
+#form is what is used in form.validate and format.
+def form():
+    form = LoginForm()
+    #if the form is submitted do the indent
     if form.validate_on_submit():
-        return redirect('/success')
-    return render_template('submit.html', form=form)
+        #format({defname}.{name of the field}.data)
+        usanam = form.username.data
+        return "Form submitted. Username is {} password is {}".format(usanam, form.password.data)
+
+    return render_template('form.html', form=form)
 
 if __name__ == '__main__':
     app.debug = True
