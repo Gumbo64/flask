@@ -26,7 +26,8 @@ def form():
     if form.validate_on_submit():
         #format({defname}.{name of the field}.data)
         usanam = form.username.data
-        return "Form submitted. Username is {} password is {}".format(usanam, form.password.data)
+        paswod = form.password.data
+        return "Form submitted. Username is {} password is {}".format(usanam, passwod)
 
     return render_template('form.html', form=form)
 
