@@ -27,7 +27,10 @@ def form():
         #format({defname}.{name of the field}.data)
         usanam = form.username.data
         paswod = form.password.data
-        return "Form submitted. Username is {} password is {}".format(usanam, passwod)
+        if usanam == 'kevin' and paswod=='kevin':
+            return "kevin page"
+        else: 
+            return "Form submitted. Username is {} password is {}".format(usanam, paswod)
 
     return render_template('form.html', form=form)
 
