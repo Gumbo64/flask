@@ -1,6 +1,18 @@
 from flask import Flask, render_template, redirect
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField
+import shelve
+global chattext
+chatroom = ""
+
+try:
+    savefile = shelve.open('savefile')
+    chattext = savefile['chattext']
+except:
+    pass
+
+
+
 global username
 username = "none"
 
@@ -38,7 +50,11 @@ def form():
             return redirect("/", code=302)
 
     return render_template('form.html', form=form)
+@app.route('/chatroom')
+def chatroom():
 
+
+    return render_template('chatroom.html', chattext=chattext)
 if __name__ == '__main__':
     app.debug = True
     app.run()
