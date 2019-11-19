@@ -1,9 +1,15 @@
 from flask import Flask, render_template, redirect
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField
+from flask import Markup
+import jinja2
+
 import shelve
+global indivtext
 global chattext
-chatroom = ""
+chattext=""
+indivtext = []
+
 
 try:
     savefile = shelve.open('savefile')
@@ -23,6 +29,9 @@ class LoginForm(FlaskForm):
     username = StringField('username')
     password = PasswordField('password')
 
+class commentform(FlaskForm):
+    comment= StringField('comment')
+
 @app.route('/')
 def home():
     global number
@@ -41,20 +50,30 @@ def form():
     global username
     #if the form is submitted do the indent
     if form.validate_on_submit():
-        #format({defname}.{name of the field}.data)
+        #({form}.{name of the field}.data)
         username = form.username.data
-        paswod = form.password.data
         if username == 'kevin':
             return render_template('kevinpage.html')
         else: 
             return redirect("/", code=302)
 
     return render_template('form.html', form=form)
-@app.route('/chatroom')
-def chatroom():
-
-
-    return render_template('chatroom.html', chattext=chattext)
+@app.route('/chatroom', methods=['GET', 'POST'])
+def form1():
+    form1 = commentform()
+    global username
+    global chattext
+    global indivtext
+    
+    if form1.validate_on_submit():
+        comment = form1.comment.data
+        addable= str(username) +": "+ str(comment)
+        indivtext.append(addable)
+        chattext = ""
+        for i in indivtext:
+            chattext = chattext + "<br>" + indivtext[i]
+        chattext= jinja2.escape(chattext)
+    return render_template('chatroom.html', chattext=chattext, form=form1, username=username)
 if __name__ == '__main__':
     app.debug = True
     app.run()

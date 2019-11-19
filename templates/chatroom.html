@@ -2,11 +2,18 @@
 
 {% block header %}
 <h1>Chatroom</h1>
+<h2>Signed in as {{ username }}</h2>
 {% endblock %}
 
 {% block text %}
-<p>{{ chattext }}</p>
+<p>{{ chattext }} </p>
 {% endblock %}
 
 {% block image %}
+<form method="POST" action="{{ url_for('form1') }}">
+    {{ form.csrf_token }}
+    {{ form.comment.label}}
+    {{ form.comment }}
+    <br>
+    <input type="submit" value="Comment">
 {% endblock %}
