@@ -1,6 +1,8 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField
+global username
+username = "none"
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secretkey'
@@ -11,7 +13,9 @@ class LoginForm(FlaskForm):
 
 @app.route('/')
 def home():
-    return render_template("home.html")
+    global number
+    number=1
+    return render_template("home.html", username=username)
 
 @app.route('/yoda')
 def yoda():
@@ -22,15 +26,16 @@ def yoda():
 #form is what is used in form.validate and format.
 def form():
     form = LoginForm()
+    global username
     #if the form is submitted do the indent
     if form.validate_on_submit():
         #format({defname}.{name of the field}.data)
-        usanam = form.username.data
+        username = form.username.data
         paswod = form.password.data
-        if usanam == 'kevin' and paswod=='kevin':
+        if username == 'kevin':
             return render_template('kevinpage.html')
         else: 
-            return "Form submitted. Username is {} password is {}".format(usanam, paswod)
+            return redirect("/", code=302)
 
     return render_template('form.html', form=form)
 
