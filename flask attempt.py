@@ -28,7 +28,7 @@ def form():
         usanam = form.username.data
         paswod = form.password.data
         if usanam == 'kevin' and paswod=='kevin':
-            return "kevin page"
+            return render_template('kevinpage.html')
         else: 
             return "Form submitted. Username is {} password is {}".format(usanam, paswod)
 
