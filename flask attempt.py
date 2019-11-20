@@ -20,7 +20,7 @@ except:
 
 
 global username
-username = "none"
+username = "Anon"
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secretkey'
@@ -64,16 +64,14 @@ def form1():
     global username
     global chattext
     global indivtext
-    
+    br='<br>'
     if form1.validate_on_submit():
         comment = form1.comment.data
         addable= str(username) +": "+ str(comment)
         indivtext.append(addable)
-        chattext = ""
-        for i in indivtext:
-            chattext = chattext + "<br>" + indivtext[i]
+        chattext = br.join(indivtext)
         chattext= jinja2.escape(chattext)
-    return render_template('chatroom.html', chattext=chattext, form=form1, username=username)
+    return render_template('chatroom.html', chattext=chattext,indivtext=indivtext, form=form1, username=username)
 if __name__ == '__main__':
     app.debug = True
     app.run()

@@ -6,7 +6,9 @@
 {% endblock %}
 
 {% block text %}
-<p>{{ chattext }} </p>
+{% for x in indivtext %}
+    <p>{{ indivtext[loop.index0] }}</p>
+{% endfor %}
 {% endblock %}
 
 {% block image %}
