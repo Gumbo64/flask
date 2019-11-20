@@ -6,8 +6,6 @@ import jinja2
 
 import shelve
 global indivtext
-global chattext
-chattext=""
 indivtext = []
 
 
@@ -62,15 +60,12 @@ def form():
 def form1():
     form1 = commentform()
     global username
-    global chattext
     global indivtext
     br='<br>'
     if form1.validate_on_submit():
         comment = form1.comment.data
         addable= str(username) +": "+ str(comment)
         indivtext.append(addable)
-        chattext = br.join(indivtext)
-        chattext= jinja2.escape(chattext)
     return render_template('chatroom.html', chattext=chattext,indivtext=indivtext, form=form1, username=username)
 if __name__ == '__main__':
     app.debug = True
