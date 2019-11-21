@@ -11,7 +11,7 @@ indivtext = []
 
 try:
     savefile = shelve.open('savefile')
-    chattext = savefile['chattext']
+    indivtext = savefile['indivtext']
 except:
     pass
 
@@ -66,7 +66,9 @@ def form1():
         comment = form1.comment.data
         addable= str(username) +": "+ str(comment)
         indivtext.append(addable)
-    return render_template('chatroom.html', chattext=chattext,indivtext=indivtext, form=form1, username=username)
+        savefile = shelve.open('savefile')
+        savefile['indivtext']=indivtext
+    return render_template('chatroom.html',indivtext=indivtext, form=form1, username=username)
 if __name__ == '__main__':
     app.debug = True
     app.run()
