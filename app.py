@@ -22,8 +22,15 @@ login_manager.init_app(app)
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20), unique=True, nullable=False)
+    password = db.Column(db.String(50), nullable=False)
+    joindate = db.Column(db.DateTime, default=datetime.now)
+class chatroom(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    messager = db.Column(db.String(20), unique=True, nullable=False)
     text = db.Column(db.String(50), nullable=False)
     time = db.Column(db.DateTime, default=datetime.now)
+
+
 
 class LoginForm(FlaskForm):
     username = StringField('username')
@@ -62,11 +69,24 @@ def signup():
 def loginform():
     loginform = LoginForm()
     if loginform.validate_on_submit():
-        pass
+        try:
+            tempuser = user.query.filter_by(name=loginform.username.data)
+            if loginform.password.data == User.password:
+                user = user.query.filter_by(name=loginform.username.data)
+
+        except:
+            return 'Wrong info'
+        
+        
+
     return render_template('login.html',form=loginform)
 @app.route('/chatroom', methods=['GET', 'POST'])
 def chatroom():
-    return 'e'
+    form = commentform()
+    if form.validate_on_submit():
+        comment = form.comment.data
+        chatroom = chatroom(messager=User.name, text=comment)
+    return render_template('chatroom.html', name=User.name,text = chatroom())
     
 if __name__ == '__main__':
     app.debug = True
