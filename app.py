@@ -3,7 +3,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField
 from flask import Markup
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user
+from flask_login import LoginManager, UserMixin, login_user, current_user
 from datetime import datetime
 import jinja2
 
@@ -67,19 +67,14 @@ def signup():
 def loginform():
     loginform = LoginForm()
     if loginform.validate_on_submit():
-        try:
-            tempuser = user.query.filter_by(name=loginform.username.data)
-            if loginform.password.data == User.password:
-                login_user()
-
-        except:
-            return 'Wrong info'
-        
-        
-
+        user = User.query.filter_by(username=loginform.username.data).first()
+        if user is none or not user.check_password(form.password.data):
+            flash('Wrong info noob')
     return render_template('login.html',form=loginform)
 @app.route('/chatroom', methods=['GET', 'POST'])
 def chatroom():
+    if not current_user.is_authenticated:
+        return "log in noob"
     form = commentform()
     totaltext = []
     if form.validate_on_submit():
@@ -87,11 +82,10 @@ def chatroom():
         chatroom = Chatroom(messager=User.name, text=comment)
         db.session.add(chatroom)
         db.session.commit()
-    all = session.query(Chatroom).all
-    for comment in all:
-        adder = comment.time + ") " + comment.messager + ": " + comment.text
+    for comment in Chatroom.query.all():
+        adder = str(comment.time) + ") " + str(comment.messager) + ": " + str(comment.text)
         totaltext.append(adder)
-    return render_template('chatroom.html',form=form, name=User.name,chatroom = totaltext)
+    return render_template('chatroom.html',form=form, name=current_user.name,chatroom = totaltext)
 if __name__ == '__main__':
     app.debug = True
     app.run()

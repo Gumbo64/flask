@@ -12,7 +12,7 @@
 {% endblock %}
 
 {% block image %}
-<form method="POST" action="{{ url_for('form1') }}">
+<form method="POST" action="{{ url_for('chatroom') }}">
     {{ form.csrf_token }}
     {{ form.comment.label}}
     {{ form.comment }}
