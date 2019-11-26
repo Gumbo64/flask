@@ -47,8 +47,6 @@ def load_user(user_id):
 
 @app.route('/')
 def home():
-    global number
-    number=1
     return render_template("home.html", name= 'a')
 
 @app.route('/yoda')
@@ -62,7 +60,7 @@ def signup():
         user = User(name = form.username.data, password = form.password.data)
         db.session.add(user)
         db.session.commit()
-        return redirect("/login", code=302)
+        return redirect("/", code=302)
     return render_template('signup.html', form=form)
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -72,7 +70,7 @@ def loginform():
         try:
             tempuser = user.query.filter_by(name=loginform.username.data)
             if loginform.password.data == User.password:
-                user = user.query.filter_by(name=loginform.username.data)
+                login_user()
 
         except:
             return 'Wrong info'
@@ -83,10 +81,16 @@ def loginform():
 @app.route('/chatroom', methods=['GET', 'POST'])
 def chatroom():
     form = commentform()
+    totaltext = []
     if form.validate_on_submit():
         comment = form.comment.data
         chatroom = chatroom(messager=User.name, text=comment)
-    return render_template('chatroom.html', name=User.name,text = chatroom())
+        db.session.add(chatroom)
+        db.session.commit()
+    for comment in chatroom.query.all:
+        adder = comment.time + ") " + comment.messager + ": " + comment.text
+        totaltext.append(adder)
+    return render_template('chatroom.html',form=form, name=User.name,chatroom = totaltext)
     
 if __name__ == '__main__':
     app.debug = True
