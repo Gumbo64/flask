@@ -24,7 +24,7 @@ class User(UserMixin, db.Model):
     name = db.Column(db.String(20), unique=True, nullable=False)
     password = db.Column(db.String(50), nullable=False)
     joindate = db.Column(db.DateTime, default=datetime.now)
-class chatroom(db.Model):
+class Chatroom(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     messager = db.Column(db.String(20), unique=True, nullable=False)
     text = db.Column(db.String(50), nullable=False)
@@ -84,14 +84,14 @@ def chatroom():
     totaltext = []
     if form.validate_on_submit():
         comment = form.comment.data
-        chatroom = chatroom(messager=User.name, text=comment)
+        chatroom = Chatroom(messager=User.name, text=comment)
         db.session.add(chatroom)
         db.session.commit()
-    for comment in chatroom.query.all:
+    all = session.query(Chatroom).all
+    for comment in all:
         adder = comment.time + ") " + comment.messager + ": " + comment.text
         totaltext.append(adder)
     return render_template('chatroom.html',form=form, name=User.name,chatroom = totaltext)
-    
 if __name__ == '__main__':
     app.debug = True
     app.run()
