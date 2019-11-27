@@ -7,8 +7,8 @@
 {% block text %}
 <form method="POST" action="{{ url_for('loginform') }}">
     {{ form.csrf_token }}
-    {{ form.name.label}}
-    {{ form.name }}
+    {{ form.username.label}}
+    {{ form.username }}
     {{ form.password.label }}
     {{ form.password }}
     <br>

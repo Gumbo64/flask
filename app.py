@@ -3,7 +3,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField
 from flask import Markup
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, current_user
+from flask_login import LoginManager, UserMixin, login_user, current_user, AnonymousUserMixin
 from datetime import datetime
 import jinja2
 
@@ -21,21 +21,22 @@ login_manager.init_app(app)
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(20), unique=True, nullable=False)
+    username = db.Column(db.String(20), unique=True, nullable=False)
     password = db.Column(db.String(50), nullable=False)
     joindate = db.Column(db.DateTime, default=datetime.now)
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
+    def check_password(self, password, checkpassword):
+        if password == checkpassword:
+            return True
+        else:
+            return False
 class Chatroom(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     messager = db.Column(db.String(20), unique=True, nullable=False)
     text = db.Column(db.String(50), nullable=False)
     time = db.Column(db.DateTime, default=datetime.now)
 
-
-
 class LoginForm(FlaskForm):
-    name = StringField('name')
+    username = StringField('username')
     password = PasswordField('password')
 
 class commentform(FlaskForm):
@@ -49,7 +50,10 @@ def load_user(user_id):
 
 @app.route('/')
 def home():
-    return render_template("home.html", name= 'a')
+    if not current_user.is_authenticated:
+        return render_template("home.html", username='Guest')
+    else:
+        return render_template("home.html", username= current_user.username)
 
 @app.route('/yoda')
 def yoda():
@@ -59,7 +63,7 @@ def yoda():
 def signup():
     form = LoginForm()
     if form.validate_on_submit():
-        user = User(name = form.name.data, password = form.password.data)
+        user = User(username = form.username.data, password = form.password.data)
         db.session.add(user)
         db.session.commit()
         return redirect("/", code=302)
@@ -70,8 +74,12 @@ def loginform():
     loginform = LoginForm()
     if loginform.validate_on_submit():
         user = User.query.filter_by(username=loginform.username.data).first()
-        if user is none or not user.check_password(form.password.data):
-            flash('Wrong info noob')
+        if user.check_password(user.password, loginform.password.data):
+            login_user(user)
+            return redirect("/", code=302)
+        else:
+            flask.flash('Wrong info noob')
+        
     return render_template('login.html',form=loginform)
 @app.route('/chatroom', methods=['GET', 'POST'])
 def chatroom():
@@ -81,13 +89,13 @@ def chatroom():
     totaltext = []
     if form.validate_on_submit():
         comment = form.comment.data
-        chatroom = Chatroom(messager=User.name, text=comment)
+        chatroom = Chatroom(messager=User.username, text=comment)
         db.session.add(chatroom)
         db.session.commit()
     for comment in Chatroom.query.all():
         adder = str(comment.time) + ") " + str(comment.messager) + ": " + str(comment.text)
         totaltext.append(adder)
-    return render_template('chatroom.html',form=form, name=current_user.name,chatroom = totaltext)
+    return render_template('chatroom.html',form=form, username=current_user.username,chatroom = totaltext)
 if __name__ == '__main__':
     app.debug = True
     app.run()
@@ -102,19 +110,19 @@ if __name__ == '__main__':
 # #     pass
 # # except:
 # #     form1 = commentform()
-# #     global username
+# #     global userusername
 # #     global indivtext
 # #     if form1.validate_on_submit():
 # #         comment = form1.comment.data
-# #         addable= str(username) +": "+ str(comment)
+# #         addable= str(userusername) +": "+ str(comment)
 # #         indivtext.append(addable)
 # #         savefile = shelve.open('savefile')
 # #         savefile['indivtext']=indivtext
-# #     return render_template('chatroom.html',indivtext=indivtext, form=form1, username=username)
+# #     return render_template('chatroom.html',indivtext=indivtext, form=form1, userusername=userusername)
 
 
 
-# #     if username == 'kevin':
+# #     if userusername == 'kevin':
 # #             return render_template('kevinpage.html')
 # #     else: 
 # #             return redirect("/", code=302)
