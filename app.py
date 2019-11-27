@@ -5,18 +5,28 @@ from flask import Markup
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, current_user, AnonymousUserMixin
 from datetime import datetime
+
 import jinja2
+
+import sqlalchemy
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
 
 
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secretkey'
+app.config['SECRET_KEY'] = 'zbnjlbrknsbjisbsnjlerjkns2io23rnferjklngijerjigwjio4ij3jnr4'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
 db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
+
+engine = sqlalchemy.create_engine('sqlite:///db.sqlite3',connect_args={'check_same_thread': False})
+session = sessionmaker(bind=engine)()
+base = declarative_base()
 
 
 class User(UserMixin, db.Model):
@@ -31,8 +41,8 @@ class User(UserMixin, db.Model):
             return False
 class Chatroom(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    messager = db.Column(db.String(20), unique=True, nullable=False)
-    text = db.Column(db.String(50), nullable=False)
+    username = db.Column(db.String(20), nullable=False)
+    text = db.Column(db.String(1000), nullable=False)
     time = db.Column(db.DateTime, default=datetime.now)
 
 class LoginForm(FlaskForm):
@@ -40,7 +50,7 @@ class LoginForm(FlaskForm):
     password = PasswordField('password')
 
 class commentform(FlaskForm):
-    comment= StringField('comment')
+    comment = StringField('comment')
 
 
 @login_manager.user_loader
@@ -89,11 +99,13 @@ def chatroom():
     totaltext = []
     if form.validate_on_submit():
         comment = form.comment.data
-        chatroom = Chatroom(messager=User.username, text=comment)
-        db.session.add(chatroom)
+        username = current_user.username
+        add = Chatroom(username=username, text=comment)
+        db.session.add(add)
         db.session.commit()
-    for comment in Chatroom.query.all():
-        adder = str(comment.time) + ") " + str(comment.messager) + ": " + str(comment.text)
+    query = Chatroom.query.all()
+    for comment in query:
+        adder = str(comment.time) + ") " + str(comment.username) + ": " + str(comment.text)
         totaltext.append(adder)
     return render_template('chatroom.html',form=form, username=current_user.username,chatroom = totaltext)
 if __name__ == '__main__':
