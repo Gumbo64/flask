@@ -5,10 +5,10 @@
 {% endblock %}
 
 {% block text %}
-<form method="POST" action="{{ url_for('signup') }}">
+<form method="POST" action="{{ url_for('loginform') }}">
     {{ form.csrf_token }}
-    {{ form.username.label}}
-    {{ form.username }}
+    {{ form.name.label}}
+    {{ form.name }}
     {{ form.password.label }}
     {{ form.password }}
     <br>

@@ -24,6 +24,8 @@ class User(UserMixin, db.Model):
     name = db.Column(db.String(20), unique=True, nullable=False)
     password = db.Column(db.String(50), nullable=False)
     joindate = db.Column(db.DateTime, default=datetime.now)
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 class Chatroom(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     messager = db.Column(db.String(20), unique=True, nullable=False)
@@ -33,7 +35,7 @@ class Chatroom(db.Model):
 
 
 class LoginForm(FlaskForm):
-    username = StringField('username')
+    name = StringField('name')
     password = PasswordField('password')
 
 class commentform(FlaskForm):
@@ -57,7 +59,7 @@ def yoda():
 def signup():
     form = LoginForm()
     if form.validate_on_submit():
-        user = User(name = form.username.data, password = form.password.data)
+        user = User(name = form.name.data, password = form.password.data)
         db.session.add(user)
         db.session.commit()
         return redirect("/", code=302)
