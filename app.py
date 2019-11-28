@@ -41,16 +41,15 @@ class User(UserMixin, db.Model):
             return False
 class Chatroom(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(20), unique=True nullable=False)
-    staples = db.Column(db.String(1000), nullable=False)
-    buildings
-    lasttime = db.Column(db.DateTime, default=datetime.now)
-
-class Stapletable(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), nullable=False)
     text = db.Column(db.String(1000), nullable=False)
     time = db.Column(db.DateTime, default=datetime.now)
+
+#class Stapletable(db.Model):
+#    id = db.Column(db.Integer, primary_key=True)
+#    username = db.Column(db.String(20), unique=True, nullable=False)
+#    text = db.Column(db.String(1000), nullable=False)
+#    time = db.Column(db.DateTime, default=datetime.now)
 
 class LoginForm(FlaskForm):
     username = StringField('username')
@@ -127,14 +126,14 @@ def chatroom():
         totaltext.append(adder)
     return render_template('chatroom.html',form=form, username=current_user.username,chatroom = totaltext)
 
-@app.route('/staplefactory', methods=['GET', 'POST'])
-def staplefactory():
-    if not current_user.is_authenticated:
-        return "log in noob"
+#@app.route('/staplefactory', methods=['GET', 'POST'])
+#def staplefactory():
+#    if not current_user.is_authenticated:
+#        return "log in noob"
     
 if __name__ == '__main__':
-    app.debug = True
-    app.run()
+    #app.debug = False
+    app.run(host='mactop', port='5000')
 
 
 
