@@ -17,7 +17,7 @@ from sqlalchemy.orm import sessionmaker
 
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'zbnjlbrknsbjisbsnjlerjkns2io23rnferjklngijerjigwjio4ij3jnr4'
+app.config['SECRET_KEY'] = 'zbnjlbrkns'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
@@ -109,12 +109,12 @@ def chatroom():
     if form.validate_on_submit():
         comment = form.comment.data
         username = current_user.username
-        if comment[0:6] == r"/clear" and username == 'Rory':
+        if comment == r"/clear" and username == 'Rory':
             delete = Chatroom.query.all()
             for row in delete:
                 db.session.delete(row)
             cleared=Chatroom(username='System',text='Chat has been cleared')
-            db.session.add()
+            db.session.add(cleared)
             db.session.commit()
         else:
             add = Chatroom(username=username, text=comment)
@@ -132,33 +132,5 @@ def chatroom():
 #        return "log in noob"
     
 if __name__ == '__main__':
-    #app.debug = False
-    app.run(host='mactop', port='5000')
-
-
-
-
-
-
-# #old code
-# #  try:
-# #     pass
-# # except:
-# #     form1 = commentform()
-# #     global userusername
-# #     global indivtext
-# #     if form1.validate_on_submit():
-# #         comment = form1.comment.data
-# #         addable= str(userusername) +": "+ str(comment)
-# #         indivtext.append(addable)
-# #         savefile = shelve.open('savefile')
-# #         savefile['indivtext']=indivtext
-# #     return render_template('chatroom.html',indivtext=indivtext, form=form1, userusername=userusername)
-
-
-
-# #     if userusername == 'kevin':
-# #             return render_template('kevinpage.html')
-# #     else: 
-# #             return redirect("/", code=302)
- 
+    #app.debug = True
+    app.run(host='mactop')
