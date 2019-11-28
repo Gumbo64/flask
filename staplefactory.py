@@ -143,24 +143,4 @@ while True:
         choose()
     except ValueError:
         staples=staples+1
-    if exiting == 1:
-        savefile = shelve.open('savefile')
-        savefile['staples'] = staples
-        savefile['multiplier'] = multiplier
-        savefile['buildings'] = buildings
-        savefile['buildingname'] = buildingname
-        savefile['buildingprice'] = buildingprice
-        savefile['lasttime'] = lasttime
-        savefile['autosave'] = autosave
-        savefile.close()
-        sys.exit()
-    if autosave==1:
-        savefile = shelve.open('savefile')
-        savefile['staples'] = staples
-        savefile['multiplier'] = multiplier
-        savefile['buildings'] = buildings
-        savefile['buildingname'] = buildingname
-        savefile['buildingprice'] = buildingprice
-        savefile['lasttime'] = lasttime
-        savefile['autosave'] = autosave
-        savefile.close()
+    #save
