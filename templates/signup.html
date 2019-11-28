@@ -5,6 +5,7 @@
 {% endblock %}
 
 {% block text %}
+<p>Not the most secure server so don't use real password</p>
 <form method="POST" action="{{ url_for('signup') }}">
     {{ form.csrf_token }}
     {{ form.username.label}}

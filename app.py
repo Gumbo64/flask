@@ -83,12 +83,15 @@ def signup():
 def loginform():
     loginform = LoginForm()
     if loginform.validate_on_submit():
-        user = User.query.filter_by(username=loginform.username.data).first()
-        if user.check_password(user.password, loginform.password.data):
-            login_user(user)
-            return redirect("/", code=302)
-        else:
-            flask.flash('Wrong info noob')
+        try:
+            user = User.query.filter_by(username=loginform.username.data).first()
+            if user.check_password(user.password, loginform.password.data):
+                login_user(user)
+                return redirect("/", code=302)
+            else:
+                flask.flash('Wrong info noob')
+        except:
+            flask.flask('Wrong info noob')
         
     return render_template('login.html',form=loginform)
 @app.route('/chatroom', methods=['GET', 'POST'])
@@ -109,8 +112,8 @@ def chatroom():
         totaltext.append(adder)
     return render_template('chatroom.html',form=form, username=current_user.username,chatroom = totaltext)
 if __name__ == '__main__':
-    app.debug = True
-    app.run()
+    app.debug = False
+    app.run(host="mactop")
 
 
 
