@@ -103,16 +103,24 @@ def chatroom():
     if form.validate_on_submit():
         comment = form.comment.data
         username = current_user.username
-        add = Chatroom(username=username, text=comment)
-        db.session.add(add)
-        db.session.commit()
+        if comment[0:6] == r"/clear" and username == 'Rory':
+            delete = Chatroom.query.all()
+            for row in delete:
+                db.session.delete(row)
+            cleared=Chatroom(username='System',text='Chat has been cleared')
+            db.session.add()
+            db.session.commit()
+        else:
+            add = Chatroom(username=username, text=comment)
+            db.session.add(add)
+            db.session.commit()
     query = Chatroom.query.all()
     for comment in query:
         adder = str(comment.time) + ") " + str(comment.username) + ": " + str(comment.text)
         totaltext.append(adder)
     return render_template('chatroom.html',form=form, username=current_user.username,chatroom = totaltext)
 if __name__ == '__main__':
-    app.debug = False
+    app.debug = True
     app.run(host="mactop")
 
 
