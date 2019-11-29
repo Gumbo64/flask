@@ -6,6 +6,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, current_user, AnonymousUserMixin
 from datetime import datetime
 
+from waitress import serve
+
 import jinja2
 
 import sqlalchemy
@@ -130,7 +132,8 @@ def chatroom():
 #def staplefactory():
 #    if not current_user.is_authenticated:
 #        return "log in noob"
-    
-if __name__ == '__main__':
-    #app.debug = True
-    app.run(host='mactop')
+serve(app, listen='mactop:8080')
+
+# if __name__ == '__main__':
+#     #app.debug = True
+#     app.run(host='mactop')
