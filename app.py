@@ -99,7 +99,7 @@ def loginform():
             else:
                 flask.flash('Wrong info noob')
         except:
-            flask.flask('Wrong info noob')
+            flask.flash('Wrong info noob')
         
     return render_template('login.html',form=loginform)
 @app.route('/chatroom', methods=['GET', 'POST'])
@@ -118,6 +118,13 @@ def chatroom():
             cleared=Chatroom(username='System',text='Chat has been cleared')
             db.session.add(cleared)
             db.session.commit()
+        elif comment[0:4:1] == r"/ban" and username == 'Rory':
+            ban = User.query.filter_by(username= comment[5: : ]).first()
+            db.session.delete(ban)
+            db.session.commit()
+            cleared=Chatroom(username='System',text=ban.username + ' has been banned')
+            db.session.add(cleared)
+            db.session.commit()
         else:
             add = Chatroom(username=username, text=comment)
             db.session.add(add)
@@ -132,7 +139,7 @@ def chatroom():
 #def staplefactory():
 #    if not current_user.is_authenticated:
 #        return "log in noob"
-serve(app, listen='mactop:8080')
+serve(app, listen='*:8080')
 
 # if __name__ == '__main__':
 #     #app.debug = True
