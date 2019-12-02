@@ -139,8 +139,8 @@ def chatroom():
 #def staplefactory():
 #    if not current_user.is_authenticated:
 #        return "log in noob"
-serve(app, listen='*:8080')
 
-# if __name__ == '__main__':
-#     #app.debug = True
-#     app.run(host='mactop')
+
+ if __name__ == '__main__':
+     #app.debug = True
+     app.run(host='mactop')
