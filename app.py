@@ -1,12 +1,12 @@
-from flask import Flask, render_template, redirect
+from flask import Flask, render_template, redirect, jsonify, request
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField
 from flask import Markup
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, current_user, AnonymousUserMixin
 from datetime import datetime
-
-from waitress import serve
+import time
+import webbrowser
 
 import jinja2
 
@@ -47,11 +47,12 @@ class Chatroom(db.Model):
     text = db.Column(db.String(1000), nullable=False)
     time = db.Column(db.DateTime, default=datetime.now)
 
-#class Stapletable(db.Model):
-#    id = db.Column(db.Integer, primary_key=True)
-#    username = db.Column(db.String(20), unique=True, nullable=False)
-#    text = db.Column(db.String(1000), nullable=False)
-#    time = db.Column(db.DateTime, default=datetime.now)
+class Stapletable(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(20), unique=True, nullable=False)
+    staples = db.Column(db.Integer, default = 0)
+    multiplier = db.Column(db.Integer, default = 1)
+    lasttime = db.Column(db.DateTime, default=datetime.now)
 
 class LoginForm(FlaskForm):
     username = StringField('username')
@@ -102,6 +103,7 @@ def loginform():
             flask.flash('Wrong info noob')
         
     return render_template('login.html',form=loginform)
+
 @app.route('/chatroom', methods=['GET', 'POST'])
 def chatroom():
     if not current_user.is_authenticated:
@@ -135,12 +137,17 @@ def chatroom():
         totaltext.append(adder)
     return render_template('chatroom.html',form=form, username=current_user.username,chatroom = totaltext)
 
-#@app.route('/staplefactory', methods=['GET', 'POST'])
-#def staplefactory():
-#    if not current_user.is_authenticated:
-#        return "log in noob"
+@app.route('/_requestfactory', methods = ['GET'])
+def request():
+    return jsonify(result=time.time())
+
+@app.route('/staplefactory', methods=['GET', 'POST'])
+def staplefactory():
+    if not current_user.is_authenticated:
+        return "log in noob"
+    return render_template("staplefactory.html")
 
 
- if __name__ == '__main__':
-     #app.debug = True
-     app.run(host='mactop')
+if __name__ == '__main__':
+     app.debug = True
+     app.run()
