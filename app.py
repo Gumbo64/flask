@@ -139,13 +139,13 @@ def chatroom():
 
 @app.route('/_requestfactory', methods = ['GET'])
 def request():
-    return jsonify(result=time.time())
+    return jsonify(timeresult=time.time())
 
 @app.route('/staplefactory', methods=['GET', 'POST'])
 def staplefactory():
     if not current_user.is_authenticated:
         return "log in noob"
-    return render_template("staplefactory.html")
+    return render_template("staplefactory.html", username=current_user.username)
 
 
 if __name__ == '__main__':
