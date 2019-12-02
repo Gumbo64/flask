@@ -47,10 +47,10 @@ class Chatroom(db.Model):
     text = db.Column(db.String(1000), nullable=False)
     time = db.Column(db.DateTime, default=datetime.now)
 
-class Stapletable(db.Model):
+class Wafertable(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable=False)
-    staples = db.Column(db.Integer, default = 0)
+    wafers = db.Column(db.Integer, default = 0)
     multiplier = db.Column(db.Integer, default = 1)
     lasttime = db.Column(db.DateTime, default=datetime.now)
 
@@ -137,15 +137,16 @@ def chatroom():
         totaltext.append(adder)
     return render_template('chatroom.html',form=form, username=current_user.username,chatroom = totaltext)
 
-@app.route('/_requestfactory', methods = ['GET'])
+@app.route('/_waferrequest', methods = ['GET'])
 def request():
-    return jsonify(timeresult=time.time())
 
-@app.route('/staplefactory', methods=['GET', 'POST'])
-def staplefactory():
+    return jsonify(Wafers=time.time())
+
+@app.route('/waferfactory', methods=['GET', 'POST'])
+def waferfactory():
     if not current_user.is_authenticated:
         return "log in noob"
-    return render_template("staplefactory.html", username=current_user.username)
+    return render_template("waferfactory.html", username=current_user.username)
 
 
 if __name__ == '__main__':
