@@ -84,8 +84,8 @@ def signup():
     if form.validate_on_submit():
         user = User(username = form.username.data, password = form.password.data)
         db.session.add(user)
-        Wafer = Wafertable(username = form.username.data)
-        db.session.add(Wafer)
+        wafer = Wafertable(username=form.username.data)
+        db.session.add(wafer)
         db.session.commit()
         return redirect("/", code=302)
     return render_template('signup.html', form=form)
@@ -140,17 +140,16 @@ def chatroom():
     return render_template('chatroom.html',form=form, username=current_user.username,chatroom = totaltext)
 
 @app.route('/_waferrequest', methods = ['GET'])
-def waferrequest():
-    user = Wafertable.query.filter_by(username= current_user.username).first()
-    return jsonify(Wafers=user.wafers, Multiplier=user.multiplier)
-
-
+def request():
+    user = Wafertable.query.filter_by(username=current_user.username).first()
+    return jsonify(Wafers=user.wafers)
 
 @app.route('/waferfactory', methods=['GET', 'POST'])
 def waferfactory():
     if not current_user.is_authenticated:
         return "log in noob"
-    return render_template("waferfactory.html", username=current_user.username)
+    user = Wafertable.query.filter_by(username=current_user.username).first()
+    return render_template("waferfactory.html", username=user.username, multiplier=user.multiplier)
 
 
 if __name__ == '__main__':
