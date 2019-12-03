@@ -15,7 +15,8 @@ from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-
+buildings = {}
+buildingnames = {}
 
 
 app = Flask(__name__)
@@ -87,6 +88,9 @@ def signup():
         wafer = Wafertable(username=form.username.data)
         db.session.add(wafer)
         db.session.commit()
+
+        buildings[form.username.data]=[]
+        buildingnames[form.username.data]=[]
         return redirect("/", code=302)
     return render_template('signup.html', form=form)
 
@@ -106,12 +110,21 @@ def loginform():
         
     return render_template('login.html',form=loginform)
 
+@app.route('/_chatroom', methods = ['GET'])
+def chatrequest():
+    totaltext = []
+    query = Chatroom.query.all()
+    for comment in query:
+        adder = str(comment.time) + ") " + str(comment.username) + ": " + str(comment.text)
+        totaltext.append(adder)
+    return jsonify(totaltext=totaltext)
+
+
 @app.route('/chatroom', methods=['GET', 'POST'])
 def chatroom():
     if not current_user.is_authenticated:
         return "log in noob"
     form = commentform()
-    totaltext = []
     if form.validate_on_submit():
         comment = form.comment.data
         username = current_user.username
@@ -133,15 +146,13 @@ def chatroom():
             add = Chatroom(username=username, text=comment)
             db.session.add(add)
             db.session.commit()
-    query = Chatroom.query.all()
-    for comment in query:
-        adder = str(comment.time) + ") " + str(comment.username) + ": " + str(comment.text)
-        totaltext.append(adder)
-    return render_template('chatroom.html',form=form, username=current_user.username,chatroom = totaltext)
+    return render_template('chatroom.html',form=form, username=current_user.username)
 
 @app.route('/_waferrequest', methods = ['GET'])
 def request():
     user = Wafertable.query.filter_by(username=current_user.username).first()
+    user.wafers = user.wafers + 1
+    db.session.commit()
     return jsonify(Wafers=user.wafers)
 
 @app.route('/waferfactory', methods=['GET', 'POST'])
