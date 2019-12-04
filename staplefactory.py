@@ -2,28 +2,44 @@ import shelve
 import time
 import math
 import sys
-# in table we will need:
-# username
-# staples
-# buildingprice
-# buildings
-# buildingname={}
-# lasttime= time.time()
 
-#take variables from table
+global autosave
+autosave=False
+global exiting
+exiting=False
+global staples
+staples=0
+global multiplier
+multiplier= 1
+global bought
+bought=0
 
+buildingprice={}
+buildings={}
+buildingname={}
+lasttime= time.time()
+try:
+    savefile = shelve.open('savefile')
+    staples = savefile['staples']
+    multiplier = savefile['multiplier']
+    buildings = savefile['buildings']
+    buildingname = savefile['buildingname']
+    lasttime = savefile['lasttime']
+    autosave= savefile['autosave']
+except KeyError:
+    pass
 
+savefile.close()
 print("You start your staple company.......\n Press/hold enter to make a staple")
-
-
 def namelayer():
     layer= int(input("Which tier would you like to rename?: "))
     name = str(input("What would you like to name this tier?: "))
-
-    #into table
     buildingname[layer] = name
 
 def addsps(lasttime):
+    global staples
+    global multiplier
+    global autosave
     countingsps=0
     for position in buildings:
         countingsps=countingsps + (5**position) * buildings[position]
@@ -143,4 +159,24 @@ while True:
         choose()
     except ValueError:
         staples=staples+1
-    #save
+    if exiting == 1:
+        savefile = shelve.open('savefile')
+        savefile['staples'] = staples
+        savefile['multiplier'] = multiplier
+        savefile['buildings'] = buildings
+        savefile['buildingname'] = buildingname
+        savefile['buildingprice'] = buildingprice
+        savefile['lasttime'] = lasttime
+        savefile['autosave'] = autosave
+        savefile.close()
+        sys.exit()
+    if autosave==1:
+        savefile = shelve.open('savefile')
+        savefile['staples'] = staples
+        savefile['multiplier'] = multiplier
+        savefile['buildings'] = buildings
+        savefile['buildingname'] = buildingname
+        savefile['buildingprice'] = buildingprice
+        savefile['lasttime'] = lasttime
+        savefile['autosave'] = autosave
+        savefile.close()

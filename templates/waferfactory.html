@@ -42,9 +42,26 @@ var intervalID = setInterval(update_values,1000);
 <script>
 document.getElementById("Wafers").innerHTML;
 </script>
+<br>
+<button onclick="stopTextColor();">Stop updating</button>
 <h1>Multiplier</h1>
 <p>{{ multiplier }}</p>
 
-	<button onclick="stopTextColor();">Stop updating</button>
-	</body>
+	
+  </body>
+<h1>Buildings</h1>
+<form method="POST" action="{{ url_for('waferfactory') }}">
+  {{ form.csrf_token }}
+  <h2>Buy</h2>
+  <p>Buy a building</p>
+  <p>(enter 0 in layer to buy the highest layer, enter 0 in amount to get max amount)</p>
+  <p>Layer</p>
+  {{ form.text }}
+  <p>Amount</p>
+  {{ form.text2 }}
+  <br>
+  <input type="submit" value="Buy">
+{% for x in buildingnames %}
+  <p>{{ buildingnames[loop.index0] }}</p>
+{% endfor %}
 {% endblock %}

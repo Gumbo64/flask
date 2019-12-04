@@ -54,8 +54,8 @@ var intervalID = setInterval(update_values,5000);
 {% block image %}
 <form method="POST" action="{{ url_for('chatroom') }}">
     {{ form.csrf_token }}
-    {{ form.comment.label}}
-    {{ form.comment }}
+    {{ form.text.label}}
+    {{ form.text }}
     <br>
     <input type="submit" value="Comment">
 {% endblock %}

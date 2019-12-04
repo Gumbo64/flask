@@ -5,6 +5,7 @@ from flask import Markup
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, current_user, AnonymousUserMixin
 from datetime import datetime
+import shelve
 import time
 import webbrowser
 
@@ -15,8 +16,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-buildings = {}
-buildingnames = {}
+
 
 
 app = Flask(__name__)
@@ -30,6 +30,20 @@ login_manager.init_app(app)
 engine = sqlalchemy.create_engine('sqlite:///db.sqlite3',connect_args={'check_same_thread': False})
 session = sessionmaker(bind=engine)()
 base = declarative_base()
+
+global buildings
+buildings = {}
+global buildingnames
+buildingnames = {}
+global savefile
+savefile = {}
+
+try:
+    savefile = shelve.open('savefile', writeback=True)
+    buildings = savefile['buildings']
+    buildingnames = savefile['buildingnames']
+except:
+    pass
 
 
 class User(UserMixin, db.Model):
@@ -59,8 +73,23 @@ class LoginForm(FlaskForm):
     username = StringField('username')
     password = PasswordField('password')
 
-class commentform(FlaskForm):
-    comment = StringField('comment')
+class generalform(FlaskForm):
+    text = StringField('text')
+    text2 = StringField('text2')
+
+def countwafers(layer, single, user_buildings):
+    countingsps = 0
+    if layer == None:
+        for position in user_buildings:
+            countingsps=countingsps + (5**position) * user_buildings[position]
+    else:
+        if single == True:
+            countingsps = (5**layer)
+        else: 
+            countingsps = (5**layer) * user_buildings[layer]
+    return countingsps
+
+
 
 
 @login_manager.user_loader
@@ -81,6 +110,8 @@ def yoda():
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
+    global buildingnames
+    global buildings
     form = LoginForm()
     if form.validate_on_submit():
         user = User(username = form.username.data, password = form.password.data)
@@ -88,9 +119,10 @@ def signup():
         wafer = Wafertable(username=form.username.data)
         db.session.add(wafer)
         db.session.commit()
-
         buildings[form.username.data]=[]
         buildingnames[form.username.data]=[]
+        savefile.close()
+        savefile.open()
         return redirect("/", code=302)
     return render_template('signup.html', form=form)
 
@@ -104,9 +136,9 @@ def loginform():
                 login_user(user)
                 return redirect("/", code=302)
             else:
-                flask.flash('Wrong info noob')
+                Flask.flash('Wrong info noob')
         except:
-            flask.flash('Wrong info noob')
+            Flask.flash('Wrong info noob')
         
     return render_template('login.html',form=loginform)
 
@@ -124,9 +156,9 @@ def chatrequest():
 def chatroom():
     if not current_user.is_authenticated:
         return "log in noob"
-    form = commentform()
+    form = generalform()
     if form.validate_on_submit():
-        comment = form.comment.data
+        comment = form.text.data
         username = current_user.username
         if comment == r"/clear" and username == 'Rory':
             delete = Chatroom.query.all()
@@ -150,17 +182,57 @@ def chatroom():
 
 @app.route('/_waferrequest', methods = ['GET'])
 def request():
+    global buildings
     user = Wafertable.query.filter_by(username=current_user.username).first()
-    user.wafers = user.wafers + 1
+    try:
+        user_buildings = buildings[current_user.username]
+    except KeyError:
+        buildingnames[current_user.username] = []
+        buildings[current_user.username] = []
+        user_names = buildingnames[current_user.username]
+        user_buildings = buildings[current_user.username]
+    user.wafers = user.wafers + countwafers(None, False, user_buildings) + 1
+    savefile['buildings'] = buildings
     db.session.commit()
     return jsonify(Wafers=user.wafers)
 
 @app.route('/waferfactory', methods=['GET', 'POST'])
 def waferfactory():
+    global buildings
+    global buildingnames
+    form = generalform()
     if not current_user.is_authenticated:
         return "log in noob"
+    try:
+        user_names = buildingnames[current_user.username]
+        user_buildings = buildings[current_user.username]
+        user_names = buildingnames[current_user.username]
+        user_buildings = buildings[current_user.username]
+    except:
+        buildingnames[current_user.username] = []
+        buildings[current_user.username] = []
+        user_names = buildingnames[current_user.username]
+        user_buildings = buildings[current_user.username]
+    
+    if form.validate_on_submit():
+        try:
+            layer = int(form.text.data)
+            amount = int(form.text2.data)
+            user_buildings[layer] = user_buildings[layer] + amount
+            buildings[current_user.username] = user_buildings
+            Flask.flash('Buildings bought')
+
+        except:
+            Flask.flash('No letters!')
+        
+
+    wafertotaltext = []
+    for pos in user_buildings:
+        wafertotaltext.append( pos + ") " + str(user_buildings[pos]) + " " + str(user_names[pos]) + " make " + str(countwafers(layer=pos, single=False, buildings=buildings)) + " per second, "+str(countwafers(layer=pos, single = True, buildings=buildings))+ " each")
+    if wafertotaltext == []:
+        wafertotaltext.append("No buildings yet")
     user = Wafertable.query.filter_by(username=current_user.username).first()
-    return render_template("waferfactory.html", username=user.username, multiplier=user.multiplier)
+    return render_template("waferfactory.html", form=form, username=user.username, multiplier=user.multiplier, buildingnames = wafertotaltext)
 
 
 if __name__ == '__main__':
