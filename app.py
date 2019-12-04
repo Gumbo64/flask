@@ -88,6 +88,12 @@ def countwafers(layer, single, user_buildings):
         else: 
             countingsps = (5**layer) * user_buildings[layer]
     return countingsps
+def checkandadd(layer,user_names):
+    try:
+        a = user_names[layer]
+        return user_names[layer]
+    except:
+        return 'unnamed'
 
 
 
@@ -214,7 +220,7 @@ def waferfactory():
         user_buildings = buildings[current_user.username]
     if form.validate_on_submit():
         try:
-            layer = int(form.text.data)
+            layer = int(form.text.data) + 1
             amount = int(form.text2.data)
             print(layer, amount)
             try:
@@ -226,13 +232,14 @@ def waferfactory():
             buildings[current_user.username] = user_buildings
             #Flask.flash('Buildings bought')
             print("try2")
-        except KeyError:
+        except ValueError:
             print("try3")
             pass#Flask.flash('No letters!')
     print(user_buildings)
     wafertotaltext = []
+    
     for pos in user_buildings:
-        wafertotaltext.append(str(pos) + ") " + str(user_buildings[pos]) + " " + str(user_names[pos]) + " make " + str(countwafers(layer=pos, single=False, buildings=buildings)) + " per second, "+str(countwafers(layer=pos, single = True, buildings=buildings))+ " each")
+        wafertotaltext.append(str(pos + 1) + ") " + str(user_buildings[pos]) + " " + str(checkandadd(pos,user_names)) + " make " + str(countwafers(layer=pos, single=False, user_buildings=user_buildings)) + " per second, "+str(countwafers(layer=pos, single = True, user_buildings=user_buildings))+ " each")
     if wafertotaltext == []:
         wafertotaltext.append("No buildings yet")
     user = Wafertable.query.filter_by(username=current_user.username).first()
