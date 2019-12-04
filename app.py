@@ -136,9 +136,9 @@ def loginform():
                 login_user(user)
                 return redirect("/", code=302)
             else:
-                Flask.flash('Wrong info noob')
+                pass#Flask.flash('Wrong info noob')
         except:
-            Flask.flash('Wrong info noob')
+            pass#Flask.flash('Wrong info noob')
         
     return render_template('login.html',form=loginform)
 
@@ -206,29 +206,33 @@ def waferfactory():
     try:
         user_names = buildingnames[current_user.username]
         user_buildings = buildings[current_user.username]
-        user_names = buildingnames[current_user.username]
-        user_buildings = buildings[current_user.username]
-    except:
+    except KeyError:
+        print('got here')
         buildingnames[current_user.username] = []
-        buildings[current_user.username] = []
+        buildings[current_user.username] = [0,0]
         user_names = buildingnames[current_user.username]
         user_buildings = buildings[current_user.username]
-    
     if form.validate_on_submit():
         try:
             layer = int(form.text.data)
             amount = int(form.text2.data)
-            user_buildings[layer] = user_buildings[layer] + amount
+            print(layer, amount)
+            try:
+                user_buildings[layer] = user_buildings[layer] + amount
+                print("try1")
+            except IndexError:
+                user_buildings[layer] = 0
+                user_buildings[layer] = user_buildings[layer] + amount
             buildings[current_user.username] = user_buildings
-            Flask.flash('Buildings bought')
-
-        except:
-            Flask.flash('No letters!')
-        
-
+            #Flask.flash('Buildings bought')
+            print("try2")
+        except KeyError:
+            print("try3")
+            pass#Flask.flash('No letters!')
+    print(user_buildings)
     wafertotaltext = []
     for pos in user_buildings:
-        wafertotaltext.append( pos + ") " + str(user_buildings[pos]) + " " + str(user_names[pos]) + " make " + str(countwafers(layer=pos, single=False, buildings=buildings)) + " per second, "+str(countwafers(layer=pos, single = True, buildings=buildings))+ " each")
+        wafertotaltext.append(str(pos) + ") " + str(user_buildings[pos]) + " " + str(user_names[pos]) + " make " + str(countwafers(layer=pos, single=False, buildings=buildings)) + " per second, "+str(countwafers(layer=pos, single = True, buildings=buildings))+ " each")
     if wafertotaltext == []:
         wafertotaltext.append("No buildings yet")
     user = Wafertable.query.filter_by(username=current_user.username).first()
