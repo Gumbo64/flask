@@ -94,24 +94,15 @@ def checkandadd(layer,user_names):
         except IndexError:
             user_names.append(str(layer) + 'inators')
 def checkandaddbuildings(layer, user_buildings):
-    length = len(user_buildings)
-    if length >= layer:
-        for x in list(range(length-layer + 1)):
-            user_buildings.append(0)
+    while len(user_buildings) < layer + 1:
+        user_buildings.append(0)
+    print(user_buildings)
     return user_buildings[layer]
     
             
 def clean(wafertotaltext):
     wafertotaltext = list(dict.fromkeys(wafertotaltext))
     wafertotaltext = sorted(wafertotaltext)
-    newlist = []
-    for x in wafertotaltext:
-        temp = x
-        if temp.count('make 0 per second') == 0:
-            newlist.append(temp)
-    wafertotaltext = sorted(newlist)
-    
-            
     return wafertotaltext
     
 
@@ -265,10 +256,12 @@ def waferfactory():
     
     user_buildings = list(set(user_buildings))
     for pos in user_buildings:
-        wafertotaltext.append(str(pos) + ") " + str(checkandaddbuildings(pos, user_buildings)) + " " + str(checkandadd(pos,user_names)) + " make " + str(countwafers(layer=pos, single=False, user_buildings=user_buildings)) + " per second, "+str(countwafers(layer=pos, single = True, user_buildings=user_buildings))+ " each")
+        print (pos)
+        if user_buildings[pos] != 0:
+            wafertotaltext.append(str(pos) + ") " + str(checkandaddbuildings(pos, user_buildings)) + " " + str(checkandadd(pos,user_names)) + " make " + str(countwafers(layer=pos, single=False, user_buildings=user_buildings)) + " per second, "+str(countwafers(layer=pos, single = True, user_buildings=user_buildings))+ " each")
     if wafertotaltext == []:
         wafertotaltext.append("No buildings yet")
-    wafertotaltext = clean(wafertotaltext)
+    #wafertotaltext = clean(wafertotaltext)
     print(wafertotaltext)
     print(user_buildings)
     
