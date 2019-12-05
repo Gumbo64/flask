@@ -14,9 +14,9 @@ multiplier= 1
 global bought
 bought=0
 
-buildingprice={}
-buildings={}
-buildingname={}
+buildingprice=[]
+buildings=[]
+buildingname=[]
 lasttime= time.time()
 try:
     savefile = shelve.open('savefile')
