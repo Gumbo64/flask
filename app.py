@@ -16,21 +16,6 @@ from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-global buildings
-buildings = {}
-global buildingnames
-buildingnames = {}
-
-global savefile
-savefile = {}
-try:
-    buildings = savefile['buildings']
-    buildingnames = savefile['buildingnames']
-except:
-    savefile['buildings'] = buildings
-    savefile['buildingnames'] = buildingnames
-
-
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'zbnjlbrkns'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
@@ -66,6 +51,25 @@ class Wafertable(db.Model):
     multiplier = db.Column(db.Integer, default = 1)
     lasttime = db.Column(db.DateTime, default=datetime.now)
 
+class Buildings(db.Model):
+    __table_args__ = (
+        db.UniqueConstraint('username', 'layer', name='nocombo'),
+    )
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(20), nullable=False)
+    layer = db.Column(db.Integer, nullable=False)
+    amount = db.Column(db.Integer, nullable=False, default = 0)
+    name = db.Column(db.String(20), nullable=False, default='unnamed')
+    price = db.Column(db.Integer, nullable=False, default = 0)
+    indivproduce = db.Column(db.Integer, nullable = False, default = 0)
+
+    def updateprice(self):
+        self.price = (5**self.layer) * (1.15**self.amount) * 10
+        self.indivproduce = (5**self.layer) * self.layer
+        db.session.commit()
+
+
+
 
 
 class LoginForm(FlaskForm):
@@ -76,28 +80,57 @@ class generalform(FlaskForm):
     text = StringField('text')
     text2 = StringField('text2')
 
-def countwafers(layer, single, user_buildings):
-    countingsps = 0
-    if layer == None:
-        for position in user_buildings:
-            countingsps=countingsps + (5**position) * user_buildings[position]
-    else:
-        if single == True:
-            countingsps = (5**layer)
-        else: 
-            countingsps = (5**layer) * user_buildings[layer]
-    return countingsps
-def checkandadd(layer,user_names):
-    while True:
-        try:
-            return user_names[layer]
-        except IndexError:
-            user_names.append(str(layer) + 'inators')
-def checkandaddbuildings(layer, user_buildings):
-    while len(user_buildings) < layer + 1:
-        user_buildings.append(0)
-    print(user_buildings)
-    return user_buildings[layer]
+def totalwafers():
+    totalwafers = 0
+    counted = 0
+    counter = 1
+    while counted < Buildings.query.filter_by(username=current_user.username).count():
+        layer = Buildings.query.filter_by(username=current_user.username, layer = counter).count()
+        if layer == 0:
+            counter = counter + 1
+        else:
+            layer = Buildings.query.filter_by(username=current_user.username, layer = counter).first()
+            totalwafers = totalwafers + layer.indivproduce * layer.amount
+            counted = counted + 1 
+    
+    return totalwafers
+
+def namelist():
+    namelist = []
+    counted = 0
+    counter = 1
+    while counted < Buildings.query.filter_by(username=current_user.username).count():
+        layer = Buildings.query.filter_by(username=current_user.username, layer = counter).count()
+        if layer == 0:
+            counter = counter + 1
+        else:
+            layer = Buildings.query.filter_by(username=current_user.username, layer = counter).first()
+            add = (str(layer.layer) + ") " + str(layer.amount) + " " + layer.name + " make " + str(layer.indivproduce * layer.amount) + " per second, " + str(layer.indivproduce) + " each.")
+            namelist.append(add)
+            counted = counted + 1 
+    if namelist == []:
+        namelist.append('No buildings yet')
+    return namelist
+
+    
+            
+    
+    
+
+    
+
+def updateprice():
+    namelist = []
+    counted = 0
+    counter = 1
+    while counted < Buildings.query.filter_by(username=current_user.username).count():
+        layer = Buildings.query.filter_by(username=current_user.username, layer = counter).count()
+        if layer == 0:
+            counter = counter + 1
+        else:
+            layer = Buildings.query.filter_by(username=current_user.username, layer = counter).first()
+            layer.updateprice()
+            counted = counted + 1 
     
             
 def clean(wafertotaltext):
@@ -127,9 +160,6 @@ def yoda():
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
-    global buildingnames
-    global buildings
-    savefile.open
     form = LoginForm()
     if form.validate_on_submit():
         user = User(username = form.username.data, password = form.password.data)
@@ -137,11 +167,7 @@ def signup():
         wafer = Wafertable(username=form.username.data)
         db.session.add(wafer)
         db.session.commit()
-        buildings[form.username.data]={}
-        buildingnames[form.username.data]={}
-        savefile.close
         return redirect("/", code=302)
-    savefile.close
     return render_template('signup.html', form=form)
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -200,82 +226,38 @@ def chatroom():
 
 @app.route('/_waferrequest', methods = ['GET'])
 def request():
-    global buildings
     user = Wafertable.query.filter_by(username=current_user.username).first()
-    try:
-        user_buildings = buildings[current_user.username]
-
-    except KeyError:
-        buildingnames[current_user.username] = []
-        buildings[current_user.username] = []
-        user_names = buildingnames[current_user.username]
-        user_buildings = buildings[current_user.username]
-    user.wafers = user.wafers + (countwafers(None, False, user_buildings) + 1) * user.multiplier
+    user.wafers = user.wafers + totalwafers() + 1
     db.session.commit()
-
-    
-    buildings[current_user.username] = user_buildings
-    savefile = shelve.open('savefile')
-    savefile['buildings'] = buildings
-    savefile['buildingnames'] = buildingnames
-    savefile.close()
     return jsonify(Wafers=user.wafers)
 
 @app.route('/waferfactory', methods=['GET', 'POST'])
 def waferfactory():
-    global buildings
-    global buildingnames
     wafertotaltext = []
     form = generalform()
     if not current_user.is_authenticated:
         return "log in noob"
-    try:
-        user_names = buildingnames[current_user.username]
-        user_buildings = buildings[current_user.username]
-    except KeyError:
-        buildingnames[current_user.username] = []
-        buildings[current_user.username] = []
-        user_names = buildingnames[current_user.username]
-        user_buildings = buildings[current_user.username]
     if form.validate_on_submit():
         try:
             layer = int(form.text.data)
             amount = int(form.text2.data)
-            a = checkandaddbuildings(layer, user_buildings)
-            print(layer, amount)
             try:
-                user_buildings[layer] = user_buildings[layer] + amount
-            except IndexError:
-                user_buildings[layer] = 0
-                user_buildings[layer] = user_buildings[layer] + amount
-            buildings[current_user.username] = user_buildings
-            #Flask.flash('Buildings bought')
+                userbuilding = Buildings.query.filter_by(username=current_user.username, ).first()
+                userbuilding.amount = userbuilding.amount + amount
+                updateprice()
+                db.session.commit()
+            except:
+                new = Buildings(username = current_user.username, layer = layer, amount = amount)
+                db.session.add(new)
+                updateprice()
+                db.session.commit()
         except ValueError:
-            pass#Flask.flash('No letters!')
-    print(user_buildings)
-    
-    user_buildings = list(set(user_buildings))
-    for pos in user_buildings:
-        print (pos)
-        if user_buildings[pos] != 0:
-            wafertotaltext.append(str(pos) + ") " + str(checkandaddbuildings(pos, user_buildings)) + " " + str(checkandadd(pos,user_names)) + " make " + str(countwafers(layer=pos, single=False, user_buildings=user_buildings)) + " per second, "+str(countwafers(layer=pos, single = True, user_buildings=user_buildings))+ " each")
-    if wafertotaltext == []:
-        wafertotaltext.append("No buildings yet")
-    #wafertotaltext = clean(wafertotaltext)
-    print(wafertotaltext)
-    print(user_buildings)
+            pass
     
 
     
     user = Wafertable.query.filter_by(username=current_user.username).first()
-
-    buildings[current_user.username] = user_buildings
-    buildingnames[current_user.username] = user_names
-    savefile = shelve.open('savefile')
-    savefile['buildings'] = buildings
-    savefile['buildingnames'] = buildingnames
-    savefile.close()
-
+    wafertotaltext = namelist()
     return render_template("waferfactory.html", form=form, username=user.username, multiplier=user.multiplier, buildingnames = wafertotaltext)
 
 
