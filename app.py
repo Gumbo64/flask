@@ -60,13 +60,15 @@ class Buildings(db.Model):
     layer = db.Column(db.Integer, nullable=False)
     amount = db.Column(db.Integer, nullable=False, default = 0)
     name = db.Column(db.String(20), nullable=False, default='unnamed')
-    price = db.Column(db.Integer, nullable=False, default = 0)
-    indivproduce = db.Column(db.Integer, nullable = False, default = 0)
 
-    def updateprice(self):
-        self.price = (5**self.layer) * (1.15**self.amount) * 10
-        self.indivproduce = (5**self.layer) * self.layer
-        db.session.commit()
+    def price(self):
+        price = (5**self.layer) * (1.15**self.amount) * 10
+        return price
+        
+        
+    def indivproduce(self):
+        indivproduce = (5**self.layer) * self.layer
+        return indivproduce
 
 
 
@@ -82,16 +84,11 @@ class generalform(FlaskForm):
 
 def totalwafers():
     totalwafers = 0
-    counted = 0
-    counter = 1
-    while counted < Buildings.query.filter_by(username=current_user.username).count():
-        layer = Buildings.query.filter_by(username=current_user.username, layer = counter).count()
-        if layer == 0:
-            counter = counter + 1
-        else:
-            layer = Buildings.query.filter_by(username=current_user.username, layer = counter).first()
-            totalwafers = totalwafers + layer.indivproduce * layer.amount
-            counted = counted + 1 
+    userbuildings = Buildings.query.filter_by(username=current_user.username).all()
+    print(userbuildings)
+    for indiv in userbuildings:
+        totalwafers = totalwafers + indiv.indivproduce() * indiv.amount
+
     
     return totalwafers
 
@@ -100,14 +97,15 @@ def namelist():
     counted = 0
     counter = 1
     while counted < Buildings.query.filter_by(username=current_user.username).count():
-        layer = Buildings.query.filter_by(username=current_user.username, layer = counter).count()
-        if layer == 0:
+        countid = Buildings.query.filter_by(id=counter).first()
+        if countid.username != current_user.username:
             counter = counter + 1
         else:
-            layer = Buildings.query.filter_by(username=current_user.username, layer = counter).first()
-            add = (str(layer.layer) + ") " + str(layer.amount) + " " + layer.name + " make " + str(layer.indivproduce * layer.amount) + " per second, " + str(layer.indivproduce) + " each.")
+            selectedlayer = Buildings.query.filter_by(id=counter).first()
+            add = str(selectedlayer.layer) + ") " + str(selectedlayer.amount) + " " + selectedlayer.name + " make " + str(selectedlayer.indivproduce() * selectedlayer.amount) + " per second, " + str(selectedlayer.indivproduce()) + " each."
             namelist.append(add)
-            counted = counted + 1 
+            counted = counted + 1
+            counter = counter + 1
     if namelist == []:
         namelist.append('No buildings yet')
     return namelist
@@ -119,19 +117,7 @@ def namelist():
 
     
 
-def updateprice():
-    namelist = []
-    counted = 0
-    counter = 1
-    while counted < Buildings.query.filter_by(username=current_user.username).count():
-        layer = Buildings.query.filter_by(username=current_user.username, layer = counter).count()
-        if layer == 0:
-            counter = counter + 1
-        else:
-            layer = Buildings.query.filter_by(username=current_user.username, layer = counter).first()
-            layer.updateprice()
-            counted = counted + 1 
-    
+
             
 def clean(wafertotaltext):
     wafertotaltext = list(dict.fromkeys(wafertotaltext))
@@ -235,6 +221,7 @@ def request():
 def waferfactory():
     wafertotaltext = []
     form = generalform()
+    
     if not current_user.is_authenticated:
         return "log in noob"
     if form.validate_on_submit():
@@ -242,14 +229,14 @@ def waferfactory():
             layer = int(form.text.data)
             amount = int(form.text2.data)
             try:
-                userbuilding = Buildings.query.filter_by(username=current_user.username, ).first()
+                userbuilding = Buildings.query.filter_by(username=current_user.username, layer = layer).first()
                 userbuilding.amount = userbuilding.amount + amount
-                updateprice()
+                
                 db.session.commit()
             except:
                 new = Buildings(username = current_user.username, layer = layer, amount = amount)
                 db.session.add(new)
-                updateprice()
+                
                 db.session.commit()
         except ValueError:
             pass
@@ -257,8 +244,7 @@ def waferfactory():
 
     
     user = Wafertable.query.filter_by(username=current_user.username).first()
-    wafertotaltext = namelist()
-    return render_template("waferfactory.html", form=form, username=user.username, multiplier=user.multiplier, buildingnames = wafertotaltext)
+    return render_template("waferfactory.html", form=form, username=user.username, multiplier=user.multiplier, buildingnames = namelist(), persecond = totalwafers() + 1)
 
 
 if __name__ == '__main__':
