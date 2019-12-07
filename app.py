@@ -28,6 +28,7 @@ engine = sqlalchemy.create_engine('sqlite:///db.sqlite3',connect_args={'check_sa
 session = sessionmaker(bind=engine)()
 base = declarative_base()
 
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable=False)
@@ -46,8 +47,8 @@ class Chatroom(db.Model):
 
 class Wafertable(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(20), unique=True, nullable=False)
-    wafers = db.Column(db.Integer, default = 0)
+    username = db.Column(db.String(20), nullable=False)
+    wafers = db.Column(db.String(9999999999999999999999999999999999), nullable=False)
     multiplier = db.Column(db.Integer, default = 1)
     lasttime = db.Column(db.DateTime, default=datetime.now)
 
@@ -85,40 +86,118 @@ class generalform(FlaskForm):
 def totalwafers():
     totalwafers = 0
     userbuildings = Buildings.query.filter_by(username=current_user.username).all()
-    print(userbuildings)
     for indiv in userbuildings:
         totalwafers = totalwafers + indiv.indivproduce() * indiv.amount
-
-    
     return totalwafers
 
 def namelist():
     namelist = []
-    counted = 0
-    counter = 1
-    while counted < Buildings.query.filter_by(username=current_user.username).count():
-        countid = Buildings.query.filter_by(id=counter).first()
-        if countid.username != current_user.username:
-            counter = counter + 1
-        else:
-            selectedlayer = Buildings.query.filter_by(id=counter).first()
-            add = str(selectedlayer.layer) + ") " + str(selectedlayer.amount) + " " + selectedlayer.name + " make " + str(selectedlayer.indivproduce() * selectedlayer.amount) + " per second, " + str(selectedlayer.indivproduce()) + " each."
-            namelist.append(add)
-            counted = counted + 1
-            counter = counter + 1
+    userbuildings = Buildings.query.filter_by(username=current_user.username).all()
+    for selectedlayer in userbuildings:
+        add = str(selectedlayer.layer) + ") " + str(selectedlayer.amount) + " " + selectedlayer.name + " make " + str(selectedlayer.indivproduce() * selectedlayer.amount) + " per second, " + str(selectedlayer.indivproduce()) + " each. Costs " + str(selectedlayer.price())
+        namelist.append(add)
     if namelist == []:
         namelist.append('No buildings yet')
     return namelist
 
+def buy(layer, amount):
+
+    user = Wafertable.query.filter_by(username=current_user.username).first()
+    try:
+        row = Buildings.query.filter_by(username=current_user.username, layer = layer).first()
+        new = False
+    except:
+        new = True
+
+    if layer == 0:
+        autoall(user)
+
+    else:
+        if amount == 0:
+            autoamount(user, layer, new)
+        else:
+            normalbuy(user, layer, amount, new)
+
+def autoall(user):
+    solved = True
+    max = 0
+    prevmax = 0
+    trynew = True
+    prevnew = True
+    while not solved:
+        try:
+            row = Buildings.query.filter_by(username=current_user.username, layer = max).first()
+            price = row.price()
+            trynew = True
+        except:
+            price = (5**max) * 10
+            trynew = False
+        if price < int(user.wafers):
+            prevmax = max
+            prevnew = trynew
+            max = max + 1
+        else:
+            layer = prevmax
+            new = prevnew
+            solved = False
+    if layer == 0:
+        #give up
+        pass
+    else:
+        autoamount(user, layer, new)
+
+def autoamount(user, layer, new):
+    if new == True:
+        price = (5**layer)* 10
+    else:
+        row = Buildings.query.filter_by(username=current_user.username, layer = layer).first()
+        price = row.price()
     
-            
-    
-    
+    if int(user.wafers) < price:
+        autoall(user)
+    else:
+        max = 1
+        prevmax = 1
+        while int(user.wafers) > price * max:
+            prevmax = max
+            max = max + 1
+        amount = prevmax
+        if amount == 0:
+            #last resort
+            autoall(user)
+        else:
+            #buy now
+            normalbuy(user, layer, amount, new)
+
+
+        
 
     
 
+def normalbuy(user, layer, amount, new):
+    if new == True:
+        price = (5**layer)* 10
+    else:
+        row = Buildings.query.filter_by(username=current_user.username, layer = layer).first()
+        price = row.price()
 
-            
+    if int(user.wafers) < price * amount:
+        #can't afford normal
+        autoamount(user, layer, new)
+    else:
+        #can afford normal
+        user.wafers = str(int(user.wafers) - price * amount)
+        if new == True:
+            new = Buildings(username = current_user.username, layer = layer, amount = amount)
+            db.session.add(new)
+        else:
+            row.amount = row.amount + amount
+        db.session.commit()
+
+    
+
+        
+    
 def clean(wafertotaltext):
     wafertotaltext = list(dict.fromkeys(wafertotaltext))
     wafertotaltext = sorted(wafertotaltext)
@@ -150,7 +229,7 @@ def signup():
     if form.validate_on_submit():
         user = User(username = form.username.data, password = form.password.data)
         db.session.add(user)
-        wafer = Wafertable(username=form.username.data)
+        wafer = Wafertable(username=form.username.data, wafers = str(0))
         db.session.add(wafer)
         db.session.commit()
         return redirect("/", code=302)
@@ -213,7 +292,7 @@ def chatroom():
 @app.route('/_waferrequest', methods = ['GET'])
 def request():
     user = Wafertable.query.filter_by(username=current_user.username).first()
-    user.wafers = user.wafers + totalwafers() + 1
+    user.wafers = str(int(user.wafers) + totalwafers() + 1)
     db.session.commit()
     return jsonify(Wafers=user.wafers)
 
@@ -228,21 +307,9 @@ def waferfactory():
         try:
             layer = int(form.text.data)
             amount = int(form.text2.data)
-            try:
-                userbuilding = Buildings.query.filter_by(username=current_user.username, layer = layer).first()
-                userbuilding.amount = userbuilding.amount + amount
-                
-                db.session.commit()
-            except:
-                new = Buildings(username = current_user.username, layer = layer, amount = amount)
-                db.session.add(new)
-                
-                db.session.commit()
+            buy(layer, amount)
         except ValueError:
             pass
-    
-
-    
     user = Wafertable.query.filter_by(username=current_user.username).first()
     return render_template("waferfactory.html", form=form, username=user.username, multiplier=user.multiplier, buildingnames = namelist(), persecond = totalwafers() + 1)
 

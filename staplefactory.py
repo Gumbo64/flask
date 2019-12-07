@@ -11,8 +11,8 @@ global staples
 staples=0
 global multiplier
 multiplier= 1
-global bought
-bought=0
+global layer
+layer=0
 
 buildingprice=[]
 buildings=[]
@@ -53,61 +53,61 @@ def buy():
     global staples
     global multiplier
     global autosave
-    global bought
+    global layer
     for i in buildings:
         try:
             print("cost: " + str((5**buildings[i])*buildings[i]) + " name: " +buildingname[i] + " amount: " + str(buildings[i]))
         except KeyError:
             buildingname[i]="unnamed"
             print(buildingname[i] + ": " + str(buildings[i]))
-    bought = int(input("What building tier would you like to buy? (enter 0 for max): "))
-    #tries to buy 1 of the highest building it can
+    layer = int(input("What building tier would you like to buy? (enter 0 for max): "))
+    #tries to buy 1 of the highest building it can, else sets amount to 0
     max = 0
     prevmax = 0
-    if bought == 0:
+    if layer == 0:
         solved = False
         while not solved:
             try:
-                while (staples / ((((5**max) *10))* 1.15**buildings[bought])) > 1:
+                while (staples / ((((5**max) *10))* 1.15**buildings[layer])) > 1:
                     prevmax= max
                     max=max+1
-                bought=prevmax
+                layer=prevmax
                 solved=True
             except:
-                buildings[bought]=0
-        bought = prevmax
+                buildings[layer]=0
+        layer = prevmax
         
     
         
     # checks if you can afford what you want, otherwise sets it to buy max
-    quantity = int(input("How many would you like to buy? (enter 0 for max): "))
+    amount = int(input("How many would you like to buy? (enter 0 for max): "))
     try:
-        if quantity * buildingprice[bought] * 1.15**buildings[bought]  > staples:
-            quantity = 0
+        if amount * buildingprice[layer] * 1.15**buildings[layer]  > staples:
+            amount = 0
     except KeyError:
-        buildingprice[bought]= 5**bought * 10
-        if quantity*buildingprice[bought] > staples:
-            quantity = 0
+        buildingprice[layer]= 5**layer * 10
+        if amount*buildingprice[layer] > staples:
+            amount = 0
         
         
-    #if 0 quantity buy max of bought
+    #if 0 amount buy max of layer
     try:
-        buildingprice[bought]=buildingprice[bought]
-        if quantity == 0:
-            quantity = math.floor(staples/ (buildingprice[bought] *1.15**buildings[bought])) 
+        buildingprice[layer]=buildingprice[layer]
+        if amount == 0:
+            amount = math.floor(staples/ (buildingprice[layer] *1.15**buildings[layer])) 
     except KeyError:
-        buildingprice[bought] = math.ceil(5**bought * 10 )
-        if quantity == 0:
-            quantity = math.floor(staples/ buildingprice[bought])
-    staples=staples- buildingprice[bought] * quantity
+        buildingprice[layer] = math.ceil(5**layer * 10 )
+        if amount == 0:
+            amount = math.floor(staples/ buildingprice[layer])
+    staples=staples- buildingprice[layer] * amount
     
     #adds the number of buildings to the slot
     try:
-        buildings[bought]=buildings[bought] + quantity
+        buildings[layer]=buildings[layer] + amount
     except KeyError:
-        buildings[bought]=0
-        buildingname[bought]= input("What would you like to name this building type?(layer "+str(bought)+ ")")
-        buildings[bought]=buildings[bought] + quantity
+        buildings[layer]=0
+        buildingname[layer]= input("What would you like to name this building type?(layer "+str(layer)+ ")")
+        buildings[layer]=buildings[layer] + amount
     
 def status():
     global autosave
@@ -133,7 +133,7 @@ def choose():
         buy()
     if choice == 2:
         if staples >= (10000**multiplier):
-            print("Bought multiplier")
+            print("layer multiplier")
             staples=staples-10000**(multiplier)
             multiplier=multiplier+1
         else:
