@@ -60,8 +60,14 @@ document.getElementById("Wafers").innerHTML;
   {{ form.text }}
   <p>Amount</p>
   {{ form.text2 }}
-  <br>
   <input type="submit" value="Buy">
+  <br>
+  <h2>Rename</h2>
+  <p>Layer</p>
+  {{ form.text3 }}
+  <p>New name</p>
+  {{ form.text4 }}
+  <input type="submit" value="Rename">
 {% for x in buildingnames %}
   <p>{{ buildingnames[loop.index0] }}</p>
 {% endfor %}

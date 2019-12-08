@@ -8,6 +8,7 @@ from datetime import datetime
 import shelve
 import time
 import webbrowser
+import math
 
 import jinja2
 
@@ -64,7 +65,7 @@ class Buildings(db.Model):
 
     def price(self):
         price = (5**self.layer) * (1.15**self.amount) * 10
-        return price
+        return math.ceil(price)
         
         
     def indivproduce(self):
@@ -82,6 +83,8 @@ class LoginForm(FlaskForm):
 class generalform(FlaskForm):
     text = StringField('text')
     text2 = StringField('text2')
+    text3 = StringField('text3')
+    text4 = StringField('text4')
 
 def totalwafers():
     totalwafers = 0
@@ -94,67 +97,55 @@ def namelist():
     namelist = []
     userbuildings = Buildings.query.filter_by(username=current_user.username).all()
     for selectedlayer in userbuildings:
-        add = str(selectedlayer.layer) + ") " + str(selectedlayer.amount) + " " + selectedlayer.name + " make " + str(selectedlayer.indivproduce() * selectedlayer.amount) + " per second, " + str(selectedlayer.indivproduce()) + " each. Costs " + str(selectedlayer.price())
+        add = str(selectedlayer.layer) + ") " + str(selectedlayer.amount) + " " + selectedlayer.name + " makes " + str(selectedlayer.indivproduce() * selectedlayer.amount) + " per second, " + str(selectedlayer.indivproduce()) + " each. Costs " + str(selectedlayer.price())
         namelist.append(add)
     if namelist == []:
         namelist.append('No buildings yet')
     return namelist
 
 def buy(layer, amount):
-
     user = Wafertable.query.filter_by(username=current_user.username).first()
-    try:
-        row = Buildings.query.filter_by(username=current_user.username, layer = layer).first()
-        new = False
-    except:
-        new = True
-
     if layer == 0:
-        autoall(user)
+        autoall()
 
     else:
         if amount == 0:
-            autoamount(user, layer, new)
+            autoamount(layer)
         else:
-            normalbuy(user, layer, amount, new)
+            normalbuy(layer, amount)
 
-def autoall(user):
+def autoall():
+    user = Wafertable.query.filter_by(username=current_user.username).first()
+    layer = 0
     solved = True
-    max = 0
-    prevmax = 0
-    trynew = True
-    prevnew = True
-    while not solved:
-        try:
-            row = Buildings.query.filter_by(username=current_user.username, layer = max).first()
-            price = row.price()
-            trynew = True
-        except:
-            price = (5**max) * 10
-            trynew = False
-        if price < int(user.wafers):
-            prevmax = max
-            prevnew = trynew
-            max = max + 1
+    max = 1
+    prevmax = 1
+    price = 0
+    while int(user.wafers) > price * max:
+        row = Buildings.query.filter_by(username=current_user.username, layer = max).first()
+        if row is None:
+            price = (5**max)* 10
         else:
-            layer = prevmax
-            new = prevnew
-            solved = False
+            price = row.price()
+        prevmax = max
+        max = max + 1
+    layer = prevmax
     if layer == 0:
-        #give up
         pass
     else:
-        autoamount(user, layer, new)
+        autoamount(layer)
 
-def autoamount(user, layer, new):
-    if new == True:
+def autoamount(layer):
+    user = Wafertable.query.filter_by(username=current_user.username).first()
+    row = Buildings.query.filter_by(username=current_user.username, layer = layer).first()
+    if row is None:
         price = (5**layer)* 10
+        new = True
     else:
-        row = Buildings.query.filter_by(username=current_user.username, layer = layer).first()
         price = row.price()
-    
+        new = False
     if int(user.wafers) < price:
-        autoall(user)
+        autoall()
     else:
         max = 1
         prevmax = 1
@@ -164,29 +155,32 @@ def autoamount(user, layer, new):
         amount = prevmax
         if amount == 0:
             #last resort
-            autoall(user)
+            autoall()
         else:
             #buy now
-            normalbuy(user, layer, amount, new)
+            normalbuy(layer, amount)
 
 
         
 
     
 
-def normalbuy(user, layer, amount, new):
-    if new == True:
+def normalbuy(layer, amount):
+    user = Wafertable.query.filter_by(username=current_user.username).first()
+    row = Buildings.query.filter_by(username=current_user.username, layer = layer).first()
+    if row is None:
         price = (5**layer)* 10
+        new = True
     else:
-        row = Buildings.query.filter_by(username=current_user.username, layer = layer).first()
         price = row.price()
+        new = False
 
     if int(user.wafers) < price * amount:
         #can't afford normal
-        autoamount(user, layer, new)
+        autoamount(user, layer)
     else:
         #can afford normal
-        user.wafers = str(int(user.wafers) - price * amount)
+        user.wafers = str(math.ceil(int(user.wafers) - price * amount))
         if new == True:
             new = Buildings(username = current_user.username, layer = layer, amount = amount)
             db.session.add(new)
@@ -195,6 +189,13 @@ def normalbuy(user, layer, amount, new):
         db.session.commit()
 
     
+def rename(renamelayer, newname):
+    row = Buildings.query.filter_by(username=current_user.username, layer = renamelayer).first()
+    if row is None:
+        pass
+    else:
+        row.name = newname
+        db.session.commit()
 
         
     
@@ -292,7 +293,7 @@ def chatroom():
 @app.route('/_waferrequest', methods = ['GET'])
 def request():
     user = Wafertable.query.filter_by(username=current_user.username).first()
-    user.wafers = str(int(user.wafers) + totalwafers() + 1)
+    user.wafers = str(math.ceil(int(user.wafers) + totalwafers() + 1))
     db.session.commit()
     return jsonify(Wafers=user.wafers)
 
@@ -308,6 +309,12 @@ def waferfactory():
             layer = int(form.text.data)
             amount = int(form.text2.data)
             buy(layer, amount)
+        except ValueError:
+            pass
+        try:
+            renamelayer = int(form.text3.data)
+            newname = form.text4.data
+            rename(renamelayer, newname)
         except ValueError:
             pass
     user = Wafertable.query.filter_by(username=current_user.username).first()
